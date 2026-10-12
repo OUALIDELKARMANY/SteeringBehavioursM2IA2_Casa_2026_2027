@@ -474,6 +474,74 @@ test('sélecteur de variante d arrivée : bindArrivalSelect', () => {
   assert.throws(() => events.change(), { name: 'TypeError' });
 });
 
+test('BackgroundFX : gestion des dégradés, presets et traînées', () => {
+  const { BackgroundFX: bg } = scene();
+
+  // Présence des présets demandés
+  assert.ok(bg.PRESETS['gradient-midnight'], 'Le preset gradient-midnight doit exister');
+  assert.ok(bg.PRESETS['gradient-cyberpunk'], 'Le preset gradient-cyberpunk doit exister');
+  assert.ok(bg.PRESETS['gradient-sunset'], 'Le preset gradient-sunset doit exister');
+  assert.ok(bg.PRESETS['gradient-ocean'], 'Le preset gradient-ocean doit exister');
+  assert.ok(bg.PRESETS['gradient-matrix'], 'Le preset gradient-matrix doit exister');
+  assert.ok(bg.PRESETS['black'], 'Le preset black doit exister');
+
+  // Changement de preset
+  bg.setPreset('gradient-cyberpunk');
+  assert.equal(bg.getPreset(), 'gradient-cyberpunk');
+
+  // Traînées
+  assert.equal(bg.hasTrails(), false);
+  bg.setTrails(true);
+  assert.equal(bg.hasTrails(), true);
+
+  // Rendu sans erreur
+  assert.doesNotThrow(() => bg.render(800, 600));
+
+  // Validation d'erreur
+  assert.throws(() => bg.setPreset('unknown-preset'), { name: 'RangeError' });
+});
+
+test('SoundFX : muet, volume et résistance en environnement headless', () => {
+  const { SoundFX: sfx } = scene();
+
+  assert.equal(sfx.isMuted(), false);
+  sfx.setMuted(true);
+  assert.equal(sfx.isMuted(), true);
+
+  const toggled = sfx.toggleMute();
+  assert.equal(toggled, false);
+  assert.equal(sfx.isMuted(), false);
+
+  assert.doesNotThrow(() => sfx.setVolume(0.5));
+  assert.doesNotThrow(() => sfx.setVolume(1.5)); // Borné proprement
+
+  // En environnement test headless (sans AudioContext natif), playArrivalSound ne doit pas planter
+  assert.doesNotThrow(() => sfx.playArrivalSound('vehicle'));
+  assert.doesNotThrow(() => sfx.playArrivalSound('target'));
+});
+
+test('step avec notification sonore onArrival lors d un impact', () => {
+  const { FleeVehicle, Target, population: p } = scene();
+  const targetEntity = new Target(400, 300, 2);
+  const vehicle = new FleeVehicle(400, 300, 'seek');
+
+  let notifiedArrival = null;
+  p.step(vehicle, targetEntity, 800, 600, rng, 'vehicle', variant => {
+    notifiedArrival = variant;
+  });
+
+  assert.equal(notifiedArrival, 'vehicle', 'onArrival doit être appelé avec la variante vehicle');
+
+  let notifiedTargetArrival = null;
+  const vehicle2 = new FleeVehicle(targetEntity.pos.x, targetEntity.pos.y, 'seek');
+  p.step(vehicle2, targetEntity, 800, 600, rng, 'target', variant => {
+    notifiedTargetArrival = variant;
+  });
+
+  assert.equal(notifiedTargetArrival, 'target', 'onArrival doit être appelé avec la variante target');
+});
+
+
 
 
 
