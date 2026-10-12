@@ -84,7 +84,7 @@ const SeekPopulation = (() => {
     return true;
   }
 
-  function step(vehicle, target, w, h, rng = Math.random, arrivalVariant = 'vehicle') {
+  function step(vehicle, target, w, h, rng = Math.random, arrivalVariant = 'vehicle', onArrival = null) {
     const targetPos = (target && target.pos) ? target.pos : target;
     const isTargetEntity = Boolean(target && target.pos);
 
@@ -94,6 +94,7 @@ const SeekPopulation = (() => {
       } else {
         respawn(vehicle, targetPos, w, h, rng);
       }
+      if (typeof onArrival === 'function') onArrival(arrivalVariant);
       return;
     }
     vehicle.applyBehaviors(targetPos);
@@ -105,6 +106,7 @@ const SeekPopulation = (() => {
       } else {
         respawn(vehicle, targetPos, w, h, rng);
       }
+      if (typeof onArrival === 'function') onArrival(arrivalVariant);
     }
   }
 

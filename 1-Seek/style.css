@@ -31,13 +31,49 @@ html, body {
 }
 
 #behavior-mode,
-#arrival-variant {
+#arrival-variant,
+#bg-preset {
   padding: 4px 8px;
   background: #12151b;
   color: #fff;
   border: 1px solid #444c5c;
   border-radius: 4px;
   font-size: 0.9rem;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ctrl-btn {
+  padding: 4px 10px;
+  background: #2b3345;
+  color: #fff;
+  border: 1px solid #5a6885;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ctrl-btn:hover {
+  background: #3d4963;
+}
+
+.ctrl-btn.active {
+  background: #3662a8;
+  border-color: #89b4ff;
+}
+
+.volume-slider {
+  width: 65px;
+  min-height: 20px;
+  accent-color: #89b4ff;
 }
 
 .hint {

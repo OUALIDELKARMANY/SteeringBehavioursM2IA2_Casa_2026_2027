@@ -16,12 +16,26 @@ class Vector {
   static random2D() { return new Vector(1, 0); }
 }
 function scene(w = 800, h = 600) {
-  const context = vm.createContext({ createVector: (x, y) => new Vector(x, y),
-    p5: { Vector }, width: w, height: h });
-  for (const file of ['vehicle.js', 'target.js', 'fleeVehicle.js', 'population.js', 'mouseTarget.js']) {
+  const context = vm.createContext({
+    createVector: (x, y) => new Vector(x, y),
+    p5: { Vector },
+    width: w,
+    height: h,
+    background: () => {},
+    push: () => {},
+    pop: () => {},
+    rect: () => {},
+    drawingContext: {
+      createLinearGradient: () => ({ addColorStop: () => {} }),
+      createRadialGradient: () => ({ addColorStop: () => {} }),
+      fillStyle: '',
+      globalAlpha: 1
+    }
+  });
+  for (const file of ['vehicle.js', 'target.js', 'fleeVehicle.js', 'population.js', 'mouseTarget.js', 'backgroundEffects.js', 'soundEffects.js']) {
     vm.runInContext(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'), context);
   }
-  return vm.runInContext('({ Vehicle, Target, FleeVehicle, MouseTarget, population: SeekPopulation })', context);
+  return vm.runInContext('({ Vehicle, Target, FleeVehicle, MouseTarget, population: SeekPopulation, BackgroundFX, SoundFX })', context);
 }
 const rng = () => 0.1;
 const target = new Vector(400, 300);
