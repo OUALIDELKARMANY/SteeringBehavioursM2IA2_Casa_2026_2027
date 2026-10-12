@@ -15,15 +15,29 @@ html, body {
   background: #20242c;
 }
 
-#vehicle-count {
-  width: clamp(120px, 30vw, 320px);
+#vehicle-count,
+#max-speed,
+#max-force {
+  width: clamp(90px, 18vw, 200px);
   min-height: 28px;
   accent-color: #89b4ff;
 }
 
-#vehicle-count-value {
-  min-width: 80px;
+#vehicle-count-value,
+#max-speed-value,
+#max-force-value {
+  min-width: 65px;
   font-variant-numeric: tabular-nums;
+}
+
+#behavior-mode,
+#arrival-variant {
+  padding: 4px 8px;
+  background: #12151b;
+  color: #fff;
+  border: 1px solid #444c5c;
+  border-radius: 4px;
+  font-size: 0.9rem;
 }
 
 .hint {
