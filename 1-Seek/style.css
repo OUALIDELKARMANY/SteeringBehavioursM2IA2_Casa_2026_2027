@@ -23,10 +23,25 @@ html, body {
   accent-color: #89b4ff;
 }
 
+<<<<<<< HEAD
 #vehicle-count-value,
 #max-speed-value,
 #max-force-value {
   min-width: 65px;
+=======
+#controls input[type="range"] {
+  width: clamp(90px, 14vw, 180px);
+  min-height: 24px;
+  accent-color: #89b4ff;
+}
+
+#controls label {
+  white-space: nowrap;
+}
+
+#vehicle-count-value {
+  min-width: 80px;
+>>>>>>> upstream/main
   font-variant-numeric: tabular-nums;
 }
 
@@ -149,6 +164,19 @@ html, body {
   color: #c5cbd5;
 }
 
+#audio-toggle {
+  border: 1px solid #89b4ff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: #fff;
+  background: #303a53;
+  cursor: pointer;
+}
+
 canvas {
   display: block;
 }
+
+[hidden] { display: none !important; }
+#flee-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; border: 1px solid #8c9cb5; border-radius: 8px; }
+#controls select { padding: 6px; color: #fff; background: #303a53; border: 1px solid #89b4ff; border-radius: 6px; }

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Path Following Complex — voitures sport</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+    <script src="path.js"></script>
+    <script src="vehicle.js"></script>
+    <script src="SportCar.js"></script>
+    <script src="sketch.js"></script>
+  </head>
+  <body>
+    <header class="controls">
+      <strong>🏁 Circuit sport</strong>
+      <label>Suivi du chemin <input id="follow-weight" type="range" min="0" max="5" step="0.1" value="2"><output id="follow-value">2.0</output></label>
+      <label>Séparation <input id="separate-weight" type="range" min="0" max="5" step="0.1" value="1.2"><output id="separate-value">1.2</output></label>
+      <button id="add-car" type="button">Ajouter une voiture (')</button>
+      <label><input id="toggle-debug" type="checkbox"> Debug (D)</label>
+      <span id="car-count">1 voiture</span>
+    </header>
+    <main id="scene"></main>
+  </body>
+</html>

@@ -1,6 +1,7 @@
 class Target extends Vehicle {
   constructor(x, y, id = 1) {
     super(x, y);
+<<<<<<< HEAD
     this.id = id;
     this.vel = typeof p5 !== 'undefined' && p5.Vector && typeof p5.Vector.random2D === 'function'
       ? p5.Vector.random2D().mult(typeof random === 'function' ? random(3, 5) : 4)
@@ -14,6 +15,10 @@ class Target extends Vehicle {
     this.maxForce = 0.35;
     this.isAlerted = false;
   }
+=======
+    this.vel = p5.Vector.random2D();
+    this.vel.mult(3 );
+>>>>>>> upstream/main
 
   detects(pursuer) {
     if (!pursuer) return false;

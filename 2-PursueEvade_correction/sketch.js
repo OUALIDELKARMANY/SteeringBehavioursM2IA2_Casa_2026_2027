@@ -52,10 +52,16 @@ function draw() {
   // Fond de grille radar tactique
   drawTacticalGrid();
 
+<<<<<<< HEAD
   if (!isSimulationPaused) {
     // 3. Le vaisseau poursuit TOUJOURS la cible la plus proche
     const closestTarget = pursuer.findClosestTarget(targets);
     pursuer.currentTarget = closestTarget;
+=======
+  let force = pursuer.pursuePerfect(target);
+  //let force = pursuer.pursue(target);
+  pursuer.applyForce(force);
+>>>>>>> upstream/main
 
     if (closestTarget) {
       const pursueForce = pursuer.calculatePursuitForce(closestTarget);
