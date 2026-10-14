@@ -72,6 +72,33 @@ const SoundFX = (() => {
     }
   }
 
+  function playBoostSound() {
+    if (isMuted) return false;
+    const ctx = getContext();
+    if (!ctx) return false;
+
+    try {
+      const nowCtx = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(320, nowCtx);
+      osc.frequency.exponentialRampToValueAtTime(750, nowCtx + 0.16);
+
+      gain.gain.setValueAtTime(0.2, nowCtx);
+      gain.gain.exponentialRampToValueAtTime(0.001, nowCtx + 0.18);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(nowCtx);
+      osc.stop(nowCtx + 0.18);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   function setMuted(muted) {
     isMuted = Boolean(muted);
   }
@@ -91,6 +118,7 @@ const SoundFX = (() => {
   return {
     getContext,
     playArrivalSound,
+    playBoostSound,
     setMuted,
     toggleMute,
     setVolume,

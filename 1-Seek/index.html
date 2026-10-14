@@ -8,6 +8,7 @@
     <script src="libraries/p5.min.js"></script>
     <script src="vehicle.js"></script>
     <script src="target.js"></script>
+    <script src="targetFuyante.js"></script>
     <script src="fleeVehicle.js"></script>
     <script src="population.js"></script>
     <script src="backgroundEffects.js"></script>
@@ -16,6 +17,12 @@
   </head>
   <body>
     <header id="controls">
+      <label for="scenario-select">Scénario :</label>
+      <select id="scenario-select">
+        <option value="scenario-1" selected>Scénario 1 : Poursuite standard</option>
+        <option value="scenario-2">Scénario 2 : Cible fuyante (TargetFuyante)</option>
+      </select>
+
       <label for="vehicle-count">Véhicules :</label>  
       <input id="vehicle-count" type="range" min="1" max="200" step="1" value="20">
       <output id="vehicle-count-value" for="vehicle-count">20 / 200</output>
@@ -39,6 +46,22 @@
         <option value="vehicle" selected>Variante A (Véhicule réapparaît)</option>
         <option value="target">Variante B (Cible réapparaît)</option>
       </select>
+
+      <div id="scenario2-controls" class="scenario-group">
+        <label for="detection-radius">Cercle détection :</label>
+        <input id="detection-radius" type="range" min="50" max="400" step="10" value="200">
+        <output id="detection-radius-value" for="detection-radius">200 px</output>
+
+        <label for="flee-duration">Endurance fuite :</label>
+        <input id="flee-duration" type="range" min="0.5" max="5.0" step="0.1" value="2.5">
+        <output id="flee-duration-value" for="flee-duration">2.5 s</output>
+
+        <label class="checkbox-label" for="toggle-debug" title="Mode debug : cercle jaune/rouge (touche 'd')">
+          <input id="toggle-debug" type="checkbox"> 🔍 Mode Debug [D]
+        </label>
+      </div>
+
+      <span id="target-status-badge" class="target-badge">🎯 Cible : 3 px/f</span>
 
       <label for="bg-preset">Fond :</label>
       <select id="bg-preset">

@@ -5,9 +5,71 @@ let currentMaxSpeed = SeekPopulation.INITIAL_SPEED;
 let currentMaxForce = SeekPopulation.INITIAL_FORCE;
 let currentMode = SeekPopulation.INITIAL_MODE;
 let currentArrivalVariant = SeekPopulation.INITIAL_ARRIVAL_VARIANT;
+let currentScenario = SeekPopulation.INITIAL_SCENARIO;
+let debugMode = false;
+let currentDetectionRadius = SeekPopulation.INITIAL_DETECTION_RADIUS;
+let currentMaxFleeDuration = SeekPopulation.INITIAL_FLEE_DURATION;
 
 function sceneHeight() {
   return Math.max(1, windowHeight - document.getElementById('controls').offsetHeight);
+}
+
+function createTargetForScenario(scenario) {
+  const currentPos = (target && target.pos)
+    ? { x: target.pos.x, y: target.pos.y }
+    : { x: width / 2, y: height / 2 };
+
+  if (scenario === 'scenario-2') {
+    const t = new TargetFuyante(
+      currentPos.x,
+      currentPos.y,
+      3,
+      currentDetectionRadius,
+      300,
+      currentMaxFleeDuration
+    );
+    t.setDebug(debugMode);
+    return t;
+  }
+
+  // Scénario 1 par défaut : Target classique
+  const t = new Target(currentPos.x, currentPos.y, 3);
+  return t;
+}
+
+function updateScenarioControlsVisibility(scenario) {
+  const group = document.getElementById('scenario2-controls');
+  if (group) {
+    if (scenario === 'scenario-2') {
+      group.style.opacity = '1';
+      group.style.pointerEvents = 'auto';
+    } else {
+      group.style.opacity = '0.45';
+      group.style.pointerEvents = 'none';
+    }
+  }
+}
+
+function updateStatusBadge() {
+  const badge = document.getElementById('target-status-badge');
+  if (!badge) return;
+
+  if (currentScenario === 'scenario-2' && target instanceof TargetFuyante) {
+    const staminaSec = target.stamina.toFixed(1);
+    if (target.isFleeing) {
+      badge.textContent = `⚡ Fuite active ! Vitesse : ${target.maxSpeed} px/f (${staminaSec}s)`;
+      badge.className = 'target-badge fleeing';
+    } else if (target.stamina <= 0) {
+      badge.textContent = `⚠️ Cible épuisée ! Vitesse : ${target.maxSpeed} px/f (0.0s)`;
+      badge.className = 'target-badge exhausted';
+    } else {
+      badge.textContent = `🛡️ Cible au calme : ${target.maxSpeed} px/f (${staminaSec}s)`;
+      badge.className = 'target-badge normal';
+    }
+  } else {
+    badge.textContent = `🎯 Cible : ${target.maxSpeed || 3} px/f`;
+    badge.className = 'target-badge';
+  }
 }
 
 function setup() {
@@ -19,8 +81,57 @@ function setup() {
     SoundFX.getContext();
   }, { once: true });
 
-  // Tâche 9 : Cible autonome se déplaçant seule et bouclant aux bords
-  target = new Target(width / 2, height / 2, 3);
+  // Initialisation de la cible selon le scénario actif
+  target = createTargetForScenario(currentScenario);
+
+  // Sélecteur de scénario
+  const scenarioSelect = document.getElementById('scenario-select');
+  if (scenarioSelect) {
+    scenarioSelect.value = currentScenario;
+    SeekPopulation.bindScenarioSelect(scenarioSelect, scenario => {
+      currentScenario = scenario;
+      target = createTargetForScenario(scenario);
+      updateScenarioControlsVisibility(scenario);
+    });
+  }
+
+  // Contrôles spécifiques au Scénario 2
+  const detectionSlider = document.getElementById('detection-radius');
+  const detectionOutput = document.getElementById('detection-radius-value');
+  if (detectionSlider && detectionOutput) {
+    detectionSlider.value = currentDetectionRadius;
+    SeekPopulation.bindDetectionSlider(detectionSlider, detectionOutput, r => {
+      currentDetectionRadius = r;
+      if (target && typeof target.setDetectionRadius === 'function') {
+        target.setDetectionRadius(r);
+      }
+    });
+  }
+
+  const durationSlider = document.getElementById('flee-duration');
+  const durationOutput = document.getElementById('flee-duration-value');
+  if (durationSlider && durationOutput) {
+    durationSlider.value = currentMaxFleeDuration;
+    SeekPopulation.bindDurationSlider(durationSlider, durationOutput, d => {
+      currentMaxFleeDuration = d;
+      if (target && typeof target.setMaxFleeDuration === 'function') {
+        target.setMaxFleeDuration(d);
+      }
+    });
+  }
+
+  const debugCheckbox = document.getElementById('toggle-debug');
+  if (debugCheckbox) {
+    debugCheckbox.checked = debugMode;
+    SeekPopulation.bindDebugToggle(debugCheckbox, active => {
+      debugMode = active;
+      if (target && typeof target.setDebug === 'function') {
+        target.setDebug(debugMode);
+      }
+    });
+  }
+
+  updateScenarioControlsVisibility(currentScenario);
 
   const speedSlider = document.getElementById('max-speed');
   const speedOutput = document.getElementById('max-speed-value');
@@ -44,7 +155,6 @@ function setup() {
     });
   }
 
-  // Tâche 10 : Gestion de la variante d'arrivée
   const arrivalSelect = document.getElementById('arrival-variant');
   if (arrivalSelect) {
     arrivalSelect.value = currentArrivalVariant;
@@ -112,7 +222,10 @@ function draw() {
   // Rendu du fond dégradé (avec ou sans traînées)
   BackgroundFX.render(width, height);
 
-  // Mise à jour de la cible autonome
+  // Mise à jour de la cible : en Scénario 2, calcul des comportements face aux véhicules
+  if (currentScenario === 'scenario-2' && typeof target.applyBehaviors === 'function') {
+    target.applyBehaviors(vehicles);
+  }
   target.update();
 
   // Mise à jour des véhicules avec notification sonore lors de l'arrivée (Web Audio API)
@@ -130,6 +243,23 @@ function draw() {
   }
 
   target.show();
+
+  // Mise à jour du badge d'état
+  updateStatusBadge();
+}
+
+// Raccourci clavier 'd' pour activer/désactiver le mode debug
+function keyPressed() {
+  if (key === 'd' || key === 'D') {
+    debugMode = !debugMode;
+    if (target && typeof target.setDebug === 'function') {
+      target.setDebug(debugMode);
+    }
+    const debugCheckbox = document.getElementById('toggle-debug');
+    if (debugCheckbox) {
+      debugCheckbox.checked = debugMode;
+    }
+  }
 }
 
 function windowResized() {
@@ -137,3 +267,4 @@ function windowResized() {
   target.edges();
   for (const vehicle of vehicles) vehicle.edges();
 }
+

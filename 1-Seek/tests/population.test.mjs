@@ -25,17 +25,36 @@ function scene(w = 800, h = 600) {
     push: () => {},
     pop: () => {},
     rect: () => {},
+    stroke: () => {},
+    noStroke: () => {},
+    fill: () => {},
+    noFill: () => {},
+    strokeWeight: () => {},
+    circle: () => {},
+    line: () => {},
+    translate: () => {},
+    rotate: () => {},
+    triangle: () => {},
+    rectMode: () => {},
+    CORNER: 'corner',
+    CENTER: 'center',
+    textAlign: () => {},
+    textSize: () => {},
+    textStyle: () => {},
+    text: () => {},
+    textWidth: () => 50,
     drawingContext: {
       createLinearGradient: () => ({ addColorStop: () => {} }),
       createRadialGradient: () => ({ addColorStop: () => {} }),
       fillStyle: '',
-      globalAlpha: 1
+      globalAlpha: 1,
+      setLineDash: () => {}
     }
   });
-  for (const file of ['vehicle.js', 'target.js', 'fleeVehicle.js', 'population.js', 'mouseTarget.js', 'backgroundEffects.js', 'soundEffects.js']) {
+  for (const file of ['vehicle.js', 'target.js', 'targetFuyante.js', 'fleeVehicle.js', 'population.js', 'mouseTarget.js', 'backgroundEffects.js', 'soundEffects.js']) {
     vm.runInContext(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'), context);
   }
-  return vm.runInContext('({ Vehicle, Target, FleeVehicle, MouseTarget, population: SeekPopulation, BackgroundFX, SoundFX })', context);
+  return vm.runInContext('({ Vehicle, Target, TargetFuyante, FleeVehicle, MouseTarget, population: SeekPopulation, BackgroundFX, SoundFX })', context);
 }
 const rng = () => 0.1;
 const target = new Vector(400, 300);
@@ -539,6 +558,211 @@ test('step avec notification sonore onArrival lors d un impact', () => {
   });
 
   assert.equal(notifiedTargetArrival, 'target', 'onArrival doit être appelé avec la variante target');
+});
+
+test('TargetFuyante : héritage de Vehicle et Target, initialisation et paramètres', () => {
+  const { Vehicle, Target, TargetFuyante } = scene();
+  const tf = new TargetFuyante(400, 300, 3, 200, 300, 2.5);
+
+  assert.ok(tf instanceof Vehicle, 'TargetFuyante doit hériter de Vehicle');
+  assert.ok(tf instanceof Target, 'TargetFuyante doit hériter de Target');
+  assert.equal(tf.baseSpeed, 3);
+  assert.equal(tf.maxSpeed, 3);
+  assert.equal(tf.detectionRadius, 200);
+  assert.equal(tf.escapeRadius, 300);
+  assert.equal(tf.maxFleeDuration, 2.5);
+  assert.equal(tf.stamina, 2.5);
+  assert.equal(tf.isFleeing, false);
+  assert.equal(tf.hasIntruder, false);
+  assert.equal(tf.debug, false);
+});
+
+test('TargetFuyante : comportement autonome normal lorsque aucun prédateur n est dans le cercle de 200px', () => {
+  const { FleeVehicle, TargetFuyante } = scene();
+  const tf = new TargetFuyante(400, 300, 3, 200, 300, 2.5);
+  // Prédateur situé à distance 250px (> 200px)
+  const predator = new FleeVehicle(150, 300);
+
+  tf.applyBehaviors([predator], 0.1);
+
+  assert.equal(tf.hasIntruder, false, 'Aucun intrus ne doit être détecté hors des 200px');
+  assert.equal(tf.isFleeing, false, 'La cible ne doit pas fuir hors du cercle de détection');
+  assert.equal(tf.maxSpeed, 3, 'La vitesse maximale doit rester la vitesse normale');
+  assert.equal(tf.maxForce, 0.1, 'La force maximale doit rester la force normale');
+  assert.equal(tf.stamina, 2.5, 'L endurance ne doit pas être entamée');
+});
+
+test('TargetFuyante : détection d un prédateur dans le cercle de 200px, accélération et force de fuite flee()', () => {
+  const { FleeVehicle, TargetFuyante } = scene();
+  const tf = new TargetFuyante(400, 300, 3, 200, 300, 2.5);
+  // Prédateur situé à 150px à gauche de la cible (250, 300)
+  const predator = new FleeVehicle(250, 300);
+
+  tf.applyBehaviors([predator], 0.5);
+
+  assert.equal(tf.hasIntruder, true, 'Un intrus doit être détecté dans le cercle de 200px');
+  assert.equal(tf.isFleeing, true, 'La cible doit entrer en état de fuite');
+  assert.ok(tf.maxSpeed > tf.baseSpeed, 'La vitesse doit augmenter pendant la fuite');
+  assert.equal(tf.maxSpeed, 6, 'Vitesse de fuite attendue à 6 px/f');
+  assert.equal(tf.maxForce, 0.4, 'Force maximale accrue pour accélérer pendant la fuite');
+  assert.equal(tf.stamina, 2.0, 'L endurance doit être réduite de la durée écoulée (0.5s)');
+
+  // La force de fuite appliquée doit pointer à l opposé du prédateur (+x)
+  assert.ok(tf.acc.x > 0, 'L accélération doit éloigner la cible du prédateur');
+});
+
+test('TargetFuyante : hystérésis de fuite entre 200px et 300px', () => {
+  const { FleeVehicle, TargetFuyante } = scene();
+  const tf = new TargetFuyante(400, 300, 3, 200, 300, 2.5);
+  const predator = new FleeVehicle(250, 300); // 150px -> déclenche la fuite
+
+  tf.applyBehaviors([predator], 0.1);
+  assert.equal(tf.isFleeing, true, 'La cible commence à fuir');
+
+  // Le prédateur recule à 260px (hors des 200px, mais en-dessous des 300px)
+  predator.pos.set(140, 300); // Distance = 260px
+  tf.applyBehaviors([predator], 0.1);
+
+  assert.equal(tf.hasIntruder, false, 'Le prédateur est sorti du cercle de détection de 200px');
+  assert.equal(tf.isFleeing, true, 'La cible doit continuer à fuir tant qu elle n a pas atteint 300px');
+});
+
+test('TargetFuyante : arrêt de la fuite au-delà de 300px et reprise du comportement normal', () => {
+  const { FleeVehicle, TargetFuyante } = scene();
+  const tf = new TargetFuyante(400, 300, 3, 200, 300, 2.5);
+  const predator = new FleeVehicle(250, 300); // 150px -> déclenche la fuite
+
+  tf.applyBehaviors([predator], 0.5);
+  assert.equal(tf.isFleeing, true);
+
+  // Le prédateur est maintenant à 350px (>= 300px)
+  predator.pos.set(50, 300); // Distance = 350px
+  tf.applyBehaviors([predator], 0.2);
+
+  assert.equal(tf.isFleeing, false, 'La cible doit cesser de fuir une fois à plus de 300px');
+  assert.equal(tf.maxSpeed, 3, 'La cible reprend sa vitesse normale de base');
+  assert.equal(tf.maxForce, 0.1, 'La cible reprend sa force normale de base');
+});
+
+test('TargetFuyante : limite d endurance (2,5s max) et arrêt forcé de la fuite', () => {
+  const { FleeVehicle, TargetFuyante } = scene();
+  const tf = new TargetFuyante(400, 300, 3, 200, 300, 2.5);
+  const predator = new FleeVehicle(350, 300); // Distance = 50px
+
+  // Écoulement de 2.5 secondes de fuite
+  tf.applyBehaviors([predator], 2.5);
+
+  assert.equal(tf.stamina, 0, 'L endurance doit être entièrement consommée');
+  assert.equal(tf.isFleeing, false, 'La cible ne peut plus fuir après 2.5s d endurance épuisée');
+  assert.equal(tf.maxSpeed, 3, 'La cible retourne à sa vitesse normale malgré la proximité du prédateur');
+
+  // Au repos (prédateur éloigné), l endurance récupère progressivement
+  predator.pos.set(0, 0); // loin
+  tf.applyBehaviors([predator], 1.0);
+  assert.ok(tf.stamina > 0, 'L endurance doit récupérer progressivement au repos');
+});
+
+test('TargetFuyante : fuite orientée par rapport au prédateur le plus proche', () => {
+  const { FleeVehicle, TargetFuyante } = scene();
+  const tf = new TargetFuyante(400, 300, 3, 200, 300, 2.5);
+  // P1 à gauche à 120px (280, 300)
+  const p1 = new FleeVehicle(280, 300);
+  // P2 à droite à 40px (440, 300) -> plus proche !
+  const p2 = new FleeVehicle(440, 300);
+
+  tf.applyBehaviors([p1, p2], 0.1);
+
+  assert.equal(tf.nearestPredator, p2, 'La cible doit cibler le prédateur le plus proche');
+  // P2 étant à droite, la fuite doit pousser la cible vers la gauche (-x)
+  assert.ok(tf.acc.x < 0, 'La force de fuite doit s éloigner du prédateur le plus proche');
+});
+
+test('TargetFuyante : mode debug et visibilité du cercle', () => {
+  const { FleeVehicle, TargetFuyante } = scene();
+  const tf = new TargetFuyante(400, 300, 3, 200, 300, 2.5);
+
+  assert.equal(tf.debug, false);
+  tf.setDebug(true);
+  assert.equal(tf.debug, true);
+
+  const toggled = tf.toggleDebug();
+  assert.equal(toggled, false);
+  assert.equal(tf.debug, false);
+
+  // Rendu en mode debug avec et sans intrus
+  tf.setDebug(true);
+  assert.doesNotThrow(() => tf.show(), 'Le rendu show() avec debug actif ne doit pas lever d exception');
+
+  const predator = new FleeVehicle(300, 300); // Dans le cercle (100px <= 200px)
+  tf.applyBehaviors([predator], 0.1);
+  assert.equal(tf.hasIntruder, true);
+  assert.doesNotThrow(() => tf.show(), 'Le rendu avec intrus (cercle rouge) ne doit pas lever d exception');
+});
+
+test('SeekPopulation : gestion du sélecteur de scénario', () => {
+  const { population: p } = scene();
+  const events = {};
+  const select = { value: 'scenario-1', addEventListener: (name, fn) => { events[name] = fn; } };
+  let chosenScenario = null;
+
+  p.bindScenarioSelect(select, s => { chosenScenario = s; });
+  assert.equal(chosenScenario, 'scenario-1');
+
+  select.value = 'scenario-2';
+  events.change();
+  assert.equal(chosenScenario, 'scenario-2');
+
+  select.value = 'invalid';
+  assert.throws(() => events.change(), { name: 'TypeError' });
+});
+
+test('SeekPopulation : sliders de rayon de détection, endurance et debug', () => {
+  const { population: p } = scene();
+
+  // 1. Rayon de détection
+  const detectEvents = {};
+  const detectSlider = { value: '200', addEventListener: (name, fn) => { detectEvents[name] = fn; } };
+  const detectOutput = {};
+  let chosenRadius = null;
+  p.bindDetectionSlider(detectSlider, detectOutput, r => { chosenRadius = r; });
+  assert.equal(chosenRadius, 200);
+  assert.equal(detectOutput.value, '200 px');
+
+  detectSlider.value = '350';
+  detectEvents.input();
+  assert.equal(chosenRadius, 350);
+  assert.equal(detectOutput.value, '350 px');
+
+  detectSlider.value = '10'; // sous la borne min (50)
+  assert.throws(() => detectEvents.input(), { name: 'RangeError' });
+
+  // 2. Endurance
+  const durEvents = {};
+  const durSlider = { value: '2.5', addEventListener: (name, fn) => { durEvents[name] = fn; } };
+  const durOutput = {};
+  let chosenDur = null;
+  p.bindDurationSlider(durSlider, durOutput, d => { chosenDur = d; });
+  assert.equal(chosenDur, 2.5);
+  assert.equal(durOutput.value, '2.5 s');
+
+  durSlider.value = '4.0';
+  durEvents.input();
+  assert.equal(chosenDur, 4.0);
+  assert.equal(durOutput.value, '4.0 s');
+
+  durSlider.value = '0.1'; // sous la borne min (0.5)
+  assert.throws(() => durEvents.input(), { name: 'RangeError' });
+
+  // 3. Toggle Debug
+  const dbgEvents = {};
+  const dbgCheckbox = { checked: false, addEventListener: (name, fn) => { dbgEvents[name] = fn; } };
+  let chosenDebug = null;
+  p.bindDebugToggle(dbgCheckbox, d => { chosenDebug = d; });
+  assert.equal(chosenDebug, false);
+
+  dbgCheckbox.checked = true;
+  dbgEvents.change();
+  assert.equal(chosenDebug, true);
 });
 
 

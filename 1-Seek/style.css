@@ -30,6 +30,7 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
+#scenario-select,
 #behavior-mode,
 #arrival-variant,
 #bg-preset {
@@ -40,6 +41,73 @@ html, body {
   border-radius: 4px;
   font-size: 0.9rem;
 }
+
+#scenario-select {
+  border-color: #89b4ff;
+  font-weight: 600;
+  background: #1a2333;
+}
+
+.scenario-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 4px 10px;
+  background: rgba(30, 42, 60, 0.65);
+  border: 1px solid rgba(137, 180, 255, 0.35);
+  border-radius: 6px;
+}
+
+#detection-radius,
+#flee-duration {
+  width: clamp(75px, 12vw, 130px);
+  min-height: 24px;
+  accent-color: #ffcc00;
+}
+
+#detection-radius-value,
+#flee-duration-value {
+  min-width: 50px;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.88rem;
+}
+
+.target-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: #2b3345;
+  border: 1px solid #4a5670;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.target-badge.fleeing {
+  background: rgba(180, 40, 20, 0.6);
+  border-color: #ff5252;
+  color: #ffb4b4;
+  animation: pulse-border 1s infinite alternate;
+}
+
+.target-badge.exhausted {
+  background: rgba(100, 30, 30, 0.6);
+  border-color: #ff9100;
+  color: #ffd180;
+}
+
+.target-badge.normal {
+  background: rgba(20, 70, 40, 0.6);
+  border-color: #00e676;
+  color: #b9f6ca;
+}
+
+@keyframes pulse-border {
+  from { border-color: #ff5252; }
+  to { border-color: #ffab40; }
+}
+
 
 .checkbox-label {
   display: inline-flex;

@@ -197,14 +197,80 @@ const SeekPopulation = (() => {
     synchronize();
   }
 
+  const SCENARIOS = ['scenario-1', 'scenario-2'];
+  const INITIAL_SCENARIO = 'scenario-1';
+
+  function bindScenarioSelect(select, onScenarioChange) {
+    const synchronize = () => {
+      const scenario = select.value;
+      if (!SCENARIOS.includes(scenario)) {
+        throw new TypeError(`Scénario invalide : ${scenario}. Scénarios autorisés : ${SCENARIOS.join(', ')}.`);
+      }
+      if (onScenarioChange) onScenarioChange(scenario);
+    };
+    select.addEventListener('change', synchronize);
+    synchronize();
+  }
+
+  const MIN_DETECTION_RADIUS = 50;
+  const MAX_DETECTION_RADIUS = 400;
+  const INITIAL_DETECTION_RADIUS = 200;
+
+  function bindDetectionSlider(slider, output, onRadiusChange) {
+    const synchronize = () => {
+      const r = Number(slider.value);
+      if (typeof r !== 'number' || Number.isNaN(r) || r < MIN_DETECTION_RADIUS || r > MAX_DETECTION_RADIUS) {
+        throw new RangeError(`Le rayon de détection doit être compris entre ${MIN_DETECTION_RADIUS} et ${MAX_DETECTION_RADIUS}.`);
+      }
+      if (output) output.value = `${r} px`;
+      if (onRadiusChange) onRadiusChange(r);
+    };
+    slider.addEventListener('input', synchronize);
+    synchronize();
+  }
+
+  const MIN_FLEE_DURATION = 0.5;
+  const MAX_FLEE_DURATION = 10.0;
+  const INITIAL_FLEE_DURATION = 2.5;
+
+  function bindDurationSlider(slider, output, onDurationChange) {
+    const synchronize = () => {
+      const dur = Number(slider.value);
+      if (typeof dur !== 'number' || Number.isNaN(dur) || dur < MIN_FLEE_DURATION || dur > MAX_FLEE_DURATION) {
+        throw new RangeError(`La durée d'endurance doit être comprise entre ${MIN_FLEE_DURATION} et ${MAX_FLEE_DURATION}.`);
+      }
+      if (output) output.value = `${dur.toFixed(1)} s`;
+      if (onDurationChange) onDurationChange(dur);
+    };
+    slider.addEventListener('input', synchronize);
+    synchronize();
+  }
+
+  function bindDebugToggle(checkbox, onToggle) {
+    const synchronize = () => {
+      const active = Boolean(checkbox.checked);
+      if (onToggle) onToggle(active);
+    };
+    checkbox.addEventListener('change', synchronize);
+    synchronize();
+  }
+
   return { MIN_COUNT, MAX_COUNT, INITIAL_COUNT, ARRIVAL_RADIUS,
     MIN_SPEED, MAX_SPEED, INITIAL_SPEED,
     MIN_FORCE, MAX_FORCE, INITIAL_FORCE,
     MODES, INITIAL_MODE,
     ARRIVAL_VARIANTS, INITIAL_ARRIVAL_VARIANT,
+    SCENARIOS, INITIAL_SCENARIO,
+    MIN_DETECTION_RADIUS, MAX_DETECTION_RADIUS, INITIAL_DETECTION_RADIUS,
+    MIN_FLEE_DURATION, MAX_FLEE_DURATION, INITIAL_FLEE_DURATION,
     hasArrived, spawnPosition, resize, respawn, step, bindSlider,
     setMaxSpeed, bindSpeedSlider,
     setMaxForce, bindForceSlider,
     setBehaviorMode, bindBehaviorSelect,
-    bindArrivalSelect };
+    bindArrivalSelect,
+    bindScenarioSelect,
+    bindDetectionSlider,
+    bindDurationSlider,
+    bindDebugToggle };
 })();
+
