@@ -13,6 +13,8 @@
     <script src="path.js"></script>
     <script src="vehicle.js"></script>
     <script src="SportCar.js"></script>
+    <script src="Obstacle.js"></script>
+    <script src="raceAudio.js"></script>
     <script src="sketch.js"></script>
   </head>
   <body>
@@ -23,6 +25,28 @@
       <button id="add-car" type="button">Ajouter une voiture (')</button>
       <label><input id="toggle-debug" type="checkbox"> Debug (D)</label>
       <span id="car-count">1 voiture</span>
+      <section class="advanced-controls" aria-label="Réglages de course">
+        <label>Configurer
+          <select id="car-select"><option value="">Voiture 1</option></select>
+        </label>
+        <label>Vitesse <input id="car-speed" type="range" min="1.5" max="8" step="0.1" value="4.5"><output id="car-speed-value">4.5 px/f</output></label>
+        <label>Accélération <input id="car-acceleration" type="range" min="0.08" max="0.8" step="0.02" value="0.3"><output id="car-acceleration-value">0.30</output></label>
+        <label>Précision <input id="car-precision" type="range" min="0.5" max="2.5" step="0.1" value="1.6"><output id="car-precision-value">1.6×</output></label>
+        <label>Détection <input id="car-detection" type="range" min="60" max="300" step="10" value="150"><output id="car-detection-value">150 px</output></label>
+        <label>Conduite
+          <select id="driving-style"><option value="prudent">Prudente</option><option value="normal" selected>Normale</option><option value="agressif">Agressive</option></select>
+        </label>
+        <label>Difficulté piste
+          <select id="circuit-difficulty"><option value="facile">Facile</option><option value="normal" selected>Normale</option><option value="difficile">Difficile</option></select>
+        </label>
+        <button id="obstacle-mode" type="button">Ajouter un obstacle</button>
+        <button id="clear-obstacles" type="button" class="secondary">Effacer obstacles</button>
+        <label class="sound-control"><input id="sound-enabled" type="checkbox"> Son moteur</label>
+        <label>Volume <input id="sound-volume" type="range" min="0" max="1" step="0.05" value="0.35"><output id="sound-volume-value">35%</output></label>
+        <button id="pause-button" type="button" class="secondary">Pause</button>
+        <button id="reset-button" type="button" class="secondary">Réinitialiser</button>
+        <small>Touches : ' voiture · O obstacle · P pause · D debug</small>
+      </section>
     </header>
     <main id="scene"></main>
   </body>
